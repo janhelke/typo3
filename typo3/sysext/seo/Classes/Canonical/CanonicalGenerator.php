@@ -20,6 +20,7 @@ namespace TYPO3\CMS\Seo\Canonical;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use TYPO3\CMS\Core\Domain\Page;
 use TYPO3\CMS\Core\Domain\Repository\PageRepository;
+use TYPO3\CMS\Core\Page\PageRenderer;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\RootlineUtility;
 use TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController;
@@ -72,10 +73,11 @@ class CanonicalGenerator
         }
 
         if (!empty($href)) {
+            $pageRenderer = GeneralUtility::makeInstance(PageRenderer::class);
             $canonical = '<link ' . GeneralUtility::implodeAttributes([
                 'rel' => 'canonical',
                 'href' => $href,
-            ], true) . '/>' . LF;
+            ], true) . ($pageRenderer->getDocType()->isXmlCompliant() ? ' /' : '') . '>' . LF;
             $this->typoScriptFrontendController->additionalHeaderData[] = $canonical;
             return $canonical;
         }
