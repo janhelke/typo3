@@ -3542,6 +3542,8 @@ class DataHandler implements LoggerAwareInterface
                                 $ignoreLocalization = (bool)($value['ignoreLocalization'] ?? false);
                                 if ($table === 'pages') {
                                     $this->copyPages((int)$id, $target);
+                                } elseif ($table === 'tx_mbrtour_domain_model_tour') {
+                                    $this->copyRecord($table, (int)$id, $target, true, [], 'dates', 0, $ignoreLocalization);
                                 } else {
                                     $this->copyRecord($table, (int)$id, $target, true, [], '', 0, $ignoreLocalization);
                                 }
@@ -4965,7 +4967,11 @@ class DataHandler implements LoggerAwareInterface
             // Get the uid of record after which this localized record should be inserted
             $previousUid = $this->getPreviousLocalizedRecordUid($table, $uid, $row['pid'], $language);
             // Execute the copy:
-            $newId = $this->copyRecord($table, $uid, -$previousUid, true, $overrideValues, '', $language);
+            if ($table === 'tx_mbrtour_domain_model_tour') {
+                $newId = $this->copyRecord($table, $uid, -$previousUid, true, $overrideValues, 'dates', $language);
+            } else {
+                $newId = $this->copyRecord($table, $uid, -$previousUid, true, $overrideValues, '', $language);
+            }
         } else {
             // Create new page which needs to contain the same pid as the original page
             $overrideValues['pid'] = $row['pid'];
