@@ -4962,10 +4962,44 @@ class DataHandler implements LoggerAwareInterface
         }
 
         if ($table !== 'pages') {
-            // Get the uid of record after which this localized record should be inserted
-            $previousUid = $this->getPreviousLocalizedRecordUid($table, $uid, $row['pid'], $language);
-            // Execute the copy:
-            $newId = $this->copyRecord($table, $uid, -$previousUid, true, $overrideValues, '', $language);
+            if (isset($row['parent_id']) && $row['parent_id'] !== 0 && $language !== 0) {
+                $l10n_parent = 'l10n_parent';
+                if ($row['parent_table'] === 'tt_content') {
+                    $l10n_parent = 'l18n_parent';
+                }
+                $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($row['parent_table']);
+                $queryBuilder->getRestrictions()
+                    ->removeAll()
+                    ->add(GeneralUtility::makeInstance(DeletedRestriction::class))
+                    ->add(GeneralUtility::makeInstance(WorkspaceRestriction::class, $this->BE_USER->workspace));
+                $queryBuilder->select('*')
+                    ->from($row['parent_table'])
+                    ->where(
+                        $queryBuilder->expr()->eq(
+                            $GLOBALS['TCA'][$table]['ctrl']['languageField'],
+                            $queryBuilder->createNamedParameter($language, Connection::PARAM_INT)
+                        ),
+                        $queryBuilder->expr()->eq(
+                            $l10n_parent,
+                            $queryBuilder->createNamedParameter($row['parent_id'], Connection::PARAM_INT)
+                        )
+                    );
+                $result = $queryBuilder->executeQuery()->fetchAssociative();
+                if (!empty($result)) {
+                    $overrideValues['parent_id'] = $result['uid'];
+                    // Get the uid of record after which this localized record should be inserted
+                    $previousUid = $this->getPreviousLocalizedRecordUid($table, $uid, $row['pid'], $language);
+
+                    // Execute the copy:
+                    $newId = $this->copyRecord($table, $uid, -$previousUid, true, $overrideValues, '', $language);
+                }
+            } else {
+                // Get the uid of record after which this localized record should be inserted
+                $previousUid = $this->getPreviousLocalizedRecordUid($table, $uid, $row['pid'], $language);
+
+                // Execute the copy:
+                $newId = $this->copyRecord($table, $uid, -$previousUid, true, $overrideValues, '', $language);
+            }
         } else {
             // Create new page which needs to contain the same pid as the original page
             $overrideValues['pid'] = $row['pid'];
