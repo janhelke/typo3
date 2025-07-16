@@ -121,6 +121,7 @@ readonly class DatabaseUserPermissionCheck implements FormDataProviderInterface
                         1437679336
                     );
                 }
+            } elseif ($result['tableName'] === 'sys_file_reference') {
             } elseif (isset($result['parentPageRow']) && is_array($result['parentPageRow'])) {
                 // A non page record is edited.
                 // If there is a parent page row, check content edit right of user
