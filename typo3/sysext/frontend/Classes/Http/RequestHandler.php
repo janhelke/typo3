@@ -865,9 +865,10 @@ class RequestHandler implements RequestHandlerInterface
         $endingSlash = $pageRenderer->getDocType()->isXmlCompliant() ? '/' : '';
         $hrefLangs = $this->eventDispatcher->dispatch(new ModifyHrefLangTagsEvent($request))->getHrefLangs();
         if (count($hrefLangs) > 1) {
+            $pageRenderer = GeneralUtility::makeInstance(PageRenderer::class);
             $data = [];
             foreach ($hrefLangs as $hrefLang => $href) {
-                $data[] = sprintf('<link %s%s>', GeneralUtility::implodeAttributes([
+                $data[] = sprintf('<link %s' . ($pageRenderer->getDocType()->isXmlCompliant() ? ' /' : '') . '>', GeneralUtility::implodeAttributes([
                     'rel' => 'alternate',
                     'hreflang' => $hrefLang,
                     'href' => $href,
